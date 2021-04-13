@@ -693,7 +693,7 @@ namespace NAPS2.WinForms
             // "All" dropdown items
             tsSavePDFAll.Text = tsSaveImagesAll.Text = tsEmailPDFAll.Text = tsReverseAll.Text =
                 string.Format(MiscResources.AllCount, imageList.Images.Count);
-            tsSavePDFAll.Enabled = tsSaveImagesAll.Enabled = tsEmailPDFAll.Enabled = tsReverseAll.Enabled = tsSendLN.Enabled =
+            tsSavePDFAll.Enabled = tsSaveImagesAll.Enabled = tsEmailPDFAll.Enabled = tsReverseAll.Enabled = tsSendLN.Enabled = tsSend2Sed.Enabled
                 imageList.Images.Any();
 
             // "Selected" dropdown items
