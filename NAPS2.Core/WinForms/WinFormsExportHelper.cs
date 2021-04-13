@@ -317,21 +317,9 @@ namespace NAPS2.WinForms
                     doc = NotesUIDocument.InvokeMember("Document", BindingFlags.GetProperty, null, uidoc, null);
                     Type NotesDocument = doc.GetType();
 
-                    /*       rtf = NotesDocument.InvokeMember("GetFirstItem", BindingFlags.InvokeMethod, null, doc, new Object[] { "Body" });
-                           Type NotesRichTextItem = rtf.GetType();
-       */
                     // bring the Notes window to the front
                     String windowTitle = (String)NotesUIDocument.InvokeMember("WindowTitle", BindingFlags.GetProperty, null, uidoc, null);
                     Interaction.AppActivate(windowTitle);
-
-                    /*        embObj = NotesRichTextItem.InvokeMember("EmbedObject", BindingFlags.InvokeMethod, null, rtf, new Object[] { 1454, "", "d:\\Download\\scan17_33_39.pdf" });
-                            bool resSave = (bool)NotesDocument.InvokeMember("Save", BindingFlags.InvokeMethod, null, doc, new Object[] { true, true });
-                            if (resSave)
-                            {
-                                changeTracker.Saved(changeToken);
-                                return true;
-                            }
-                     */
 
                     StringCollection paths = new StringCollection();
                     paths.Add(@pdfFileSaved);
