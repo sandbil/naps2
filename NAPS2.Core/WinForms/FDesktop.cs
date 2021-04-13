@@ -1034,6 +1034,17 @@ namespace NAPS2.WinForms
             }
         }
 
+        private async void Send2SED(List<ScannedImage> images)
+        {
+            if (await exportHelper.SendPDF2SED(images))
+            {
+                if (appConfigManager.Config.DeleteAfterSaving)
+                {
+                    imageList.Delete(imageList.Images.IndiciesOf(images));
+                    DeleteThumbnails();
+                }
+            }
+        }
         #endregion
 
         #region Keyboard Shortcuts
@@ -1474,7 +1485,10 @@ namespace NAPS2.WinForms
         {
             Send2LN(imageList.Images);
         }
-
+        private void tsSend2Sed_Click(object sender, EventArgs e)
+        {
+            Send2SED(imageList.Images);
+        }
         #endregion
 
         #region Event Handlers - Image Menu
@@ -2096,7 +2110,10 @@ namespace NAPS2.WinForms
             return dragToIndex;
         }
 
+
+
         #endregion
-      
+
+       
     }
 }

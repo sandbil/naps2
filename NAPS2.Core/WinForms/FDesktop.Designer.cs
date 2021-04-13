@@ -71,6 +71,7 @@ namespace NAPS2.WinForms
             this.toolStripSeparator9 = new System.Windows.Forms.ToolStripSeparator();
             this.tsEmailSettings = new System.Windows.Forms.ToolStripMenuItem();
             this.tsPdfSettings2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.tsSend2Sed = new System.Windows.Forms.ToolStripButton();
             this.tsSendLN = new System.Windows.Forms.ToolStripButton();
             this.tsPrint = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
@@ -258,6 +259,7 @@ namespace NAPS2.WinForms
             this.tsdSavePDF,
             this.tsdSaveImages,
             this.tsdEmailPDF,
+            this.tsSend2Sed,
             this.tsSendLN,
             this.tsPrint,
             this.toolStripSeparator4,
@@ -444,6 +446,14 @@ namespace NAPS2.WinForms
             resources.ApplyResources(this.tsPdfSettings2, "tsPdfSettings2");
             this.tsPdfSettings2.Name = "tsPdfSettings2";
             this.tsPdfSettings2.Click += new System.EventHandler(this.tsPdfSettings2_Click);
+            // 
+            // tsSend2Sed
+            // 
+            resources.ApplyResources(this.tsSend2Sed, "tsSend2Sed");
+            this.tsSend2Sed.Name = "tsSend2Sed";
+            this.tsSend2Sed.Padding = new System.Windows.Forms.Padding(10, 0, 10, 0);
+            this.tsSend2Sed.TextDirection = System.Windows.Forms.ToolStripTextDirection.Horizontal;
+            this.tsSend2Sed.Click += new System.EventHandler(this.tsSend2Sed_Click);
             // 
             // tsSendLN
             // 
@@ -804,6 +814,7 @@ namespace NAPS2.WinForms
         private System.Windows.Forms.ToolStripMenuItem tsHueSaturation;
         private System.Windows.Forms.ToolStripMenuItem tsBlackWhite;
         private System.Windows.Forms.ToolStripButton tsSendLN;
+        private System.Windows.Forms.ToolStripButton tsSend2Sed;
     }
 }
 

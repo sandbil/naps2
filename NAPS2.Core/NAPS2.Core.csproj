@@ -759,6 +759,9 @@
       <SubType>Designer</SubType>
       <LastGenOutput>Icons.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <EmbeddedResource Include="WinForms\FDesktop.ru-RU.resx">
+      <DependentUpon>FDesktop.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="WinForms\FProxyConfig.af.resx" Condition="'$(Configuration)' != 'Debug'">
       <DependentUpon>FProxyConfig.cs</DependentUpon>
     </EmbeddedResource>
