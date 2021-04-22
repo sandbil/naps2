@@ -347,9 +347,11 @@ namespace NAPS2.WinForms
                     //StringCollection paths = new StringCollection();
                     //paths.Add(@pdfFileSaved);
                     //Clipboard.SetFileDropList(paths);
-                    //"sed://____5fe2d87ab89808114c587d57__6849c76d7f63112c18ccda394a4f5500__ff65cedc-5fa0-44f9-bef4-99b6606ffa60____60811da30f5dda0c64d3b39b____10.75.113.107____/"
-                    string docId = "60811da30f5dda0c64d3b39b";
-                    var response = await UploadFile("http://10.75.113.107:8080" + "/api/document/uploadFile", docId, pdfFileSaved, 
+                    string args = "sed://____5fe2d87ab89808114c587d57__6849c76d7f63112c18ccda394a4f5500__ff65cedc-5fa0-44f9-bef4-99b6606ffa60____60811da30f5dda0c64d3b39b____10.75.113.107____/";
+                    string[] stringSeparators = new string[] { "____" };
+                    string[] subArgs = args.Split(stringSeparators, StringSplitOptions.None);
+                    string docId = subArgs[2]; //"60811da30f5dda0c64d3b39b";
+                    var response = await UploadFile("http://" + subArgs[3] + ":8080" + "/api/document/uploadFile", docId, pdfFileSaved, 
                         new Dictionary<string, object>  {}
                         );
                     
