@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
+using System.Net;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -204,7 +205,7 @@ namespace NAPS2.WinForms
             attachmentName = fileNamePlaceholders.SubstitutePlaceholders(attachmentName, DateTime.Now, false);
             tempFolder.Create();
 
-            Object ws, uidoc, doc, rtf, embObj;
+            Object ws, uidoc, doc;
             try
             {
                 var changeToken = changeTracker.State;
@@ -273,6 +274,42 @@ namespace NAPS2.WinForms
 
         }
 
+        public async Task<string> UploadFile(string url, string docId, string filename, Dictionary<string, object> postData)
+        {
+            var request = WebRequest.Create(url);
+            var boundary = $"{Guid.NewGuid():N}"; // boundary will separate each parameter
+            request.ContentType = $"multipart/form-data; {nameof(boundary)}={boundary}";
+            request.Method = "POST";
+
+            using (var requestStream = request.GetRequestStream())
+            using (var writer = new StreamWriter(requestStream))
+            {
+                foreach (var data in postData)
+                    await writer.WriteAsync( // put all POST data into request
+                        $"\r\n--{boundary}\r\nContent-Disposition: " +
+                        $"form-data; name=\"{data.Key}\"\r\n\r\n{data.Value}");
+
+                await writer.WriteAsync( // file header
+                    $"\r\n--{boundary}\r\nContent-Disposition: " +
+                    $"form-data; name=\"File\"; filename=\"{docId}_{Path.GetFileName(filename)}\"\r\n" +
+                    "Content-Type: application/octet-stream\r\n\r\n");
+
+                await writer.FlushAsync();
+                using (var fileStream = File.OpenRead(filename))
+                    await fileStream.CopyToAsync(requestStream);
+
+                await writer.WriteAsync($"\r\n--{boundary}--\r\n");
+            }
+
+            using (var response = (HttpWebResponse)await request.GetResponseAsync())
+            using (var responseStream = response.GetResponseStream())
+            {
+                if (responseStream == null)
+                    return string.Empty;
+                using (var reader = new StreamReader(responseStream))
+                    return await reader.ReadToEndAsync();
+            }
+        }
         public async Task<bool> SendPDF2SED(List<ScannedImage> images)
         {
             if (!images.Any())
@@ -294,8 +331,7 @@ namespace NAPS2.WinForms
             }
             attachmentName = fileNamePlaceholders.SubstitutePlaceholders(attachmentName, DateTime.Now, false);
             tempFolder.Create();
-
-            Object ws, uidoc, doc, rtf, embObj;
+            
             try
             {
                 var changeToken = changeTracker.State;
@@ -303,35 +339,23 @@ namespace NAPS2.WinForms
                 string pdfFileSaved = await ExportPDF(targetPath, images, false, null);
                 if (pdfFileSaved != null)
                 {
-                    // instantiate a Notes session and workspace
-                    //Type NotesSession = Type.GetTypeFromProgID("Notes.NotesSession");
-                    //Object sess = Activator.CreateInstance(NotesSession);
-                    Type NotesUIWorkspace = Type.GetTypeFromProgID("Notes.NotesUIWorkspace");
-                    if (NotesUIWorkspace == null) throw new NullReferenceException("Not found Notes.NotesUIWorkspace");
-                    ws = Activator.CreateInstance(NotesUIWorkspace);
-                    if (ws == null) throw new NullReferenceException("Not found Notes.NotesUIWorkspace");
-                    uidoc = NotesUIWorkspace.InvokeMember("EditDocument", BindingFlags.InvokeMethod, null, ws, new Object[] { true });
-                    if (uidoc == null) throw new NullReferenceException("Not found opened document in Notes.NotesUIWorkspace");
-
-                    Type NotesUIDocument = uidoc.GetType();
-                    doc = NotesUIDocument.InvokeMember("Document", BindingFlags.GetProperty, null, uidoc, null);
-                    Type NotesDocument = doc.GetType();
 
                     // bring the Notes window to the front
-                    String windowTitle = (String)NotesUIDocument.InvokeMember("WindowTitle", BindingFlags.GetProperty, null, uidoc, null);
-                    Interaction.AppActivate(windowTitle);
+                    //String windowTitle = (String)NotesUIDocument.InvokeMember("WindowTitle", BindingFlags.GetProperty, null, uidoc, null);
+                    //Interaction.AppActivate(windowTitle);
 
-                    StringCollection paths = new StringCollection();
-                    paths.Add(@pdfFileSaved);
-                    Clipboard.SetFileDropList(paths);
-
-                    NotesUIDocument.InvokeMember("GotoField", BindingFlags.InvokeMethod, null, uidoc, new Object[] { "Body" });
-                    NotesUIDocument.InvokeMember("Paste", BindingFlags.InvokeMethod, null, uidoc, null);
+                    //StringCollection paths = new StringCollection();
+                    //paths.Add(@pdfFileSaved);
+                    //Clipboard.SetFileDropList(paths);
+                    //"sed://____5fe2d87ab89808114c587d57__6849c76d7f63112c18ccda394a4f5500__ff65cedc-5fa0-44f9-bef4-99b6606ffa60____60811da30f5dda0c64d3b39b____10.75.113.107____/"
+                    string docId = "60811da30f5dda0c64d3b39b";
+                    var response = await UploadFile("http://10.75.113.107:8080" + "/api/document/uploadFile", docId, pdfFileSaved, 
+                        new Dictionary<string, object>  {}
+                        );
+                    
 
                     changeTracker.Saved(changeToken);
                     return true;
-
-
                 }
 
             }
@@ -343,9 +367,6 @@ namespace NAPS2.WinForms
             finally
             {
                 tempFolder.Delete(true);
-                uidoc = null;
-                //sess = null;
-                ws = null;
             }
 
             return false;
