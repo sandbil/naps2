@@ -314,7 +314,7 @@ namespace NAPS2.WinForms
         {
             if (!images.Any())
             {
-                // return false;
+               return false;
             }
 
             var tempFolder = new DirectoryInfo(Path.Combine(Paths.Temp, Path.GetRandomFileName()));
@@ -334,10 +334,19 @@ namespace NAPS2.WinForms
             
             try
             {
+                //var changeToken = changeTracker.State;
+                //string targetPath = Path.Combine(tempFolder.FullName, attachmentName);
+                //string pdfFileSaved = await ExportPDF(targetPath, images, false, null);
+                //if (pdfFileSaved != null)
+                //{
+                var op = operationFactory.Create<SaveImagesOperation>();
                 var changeToken = changeTracker.State;
-                string targetPath = Path.Combine(tempFolder.FullName, attachmentName);
-                string pdfFileSaved = await ExportPDF(targetPath, images, false, null);
-                if (pdfFileSaved != null)
+                string savePath = Path.Combine(tempFolder.FullName, "aa");
+                if (op.Start(savePath, DateTime.Now, images))
+                {
+                    operationProgress.ShowProgress(op);
+                }
+                if (await op.Success)
                 {
 
                     // bring the Notes window to the front
@@ -351,10 +360,21 @@ namespace NAPS2.WinForms
                     string[] stringSeparators = new string[] { "____" };
                     string[] subArgs = args.Split(stringSeparators, StringSplitOptions.None);
                     string docId = subArgs[2]; //"60811da30f5dda0c64d3b39b";
-                    var response = await UploadFile("http://" + subArgs[3] + ":8080" + "/api/document/uploadFile", docId, pdfFileSaved, 
-                        new Dictionary<string, object>  {}
+                    //var response = await UploadFile("http://" + subArgs[3] + ":8080" + "/api/document/uploadFile", docId, pdfFileSaved, 
+                    //    new Dictionary<string, object>  {}
+                    //    );
+                    var response = await UploadFile("http://" + subArgs[3] + ":8080" + "/api/document/postStreamingScan", docId, op.FirstFileSaved,
+                        new Dictionary<string, object>  {
+                            // {"Comment", "test"},
+                            // {"Modified", DateTime.Now }
+                            { "Token", "5fe2d87ab89808114c587d57__6849c76d7f63112c18ccda394a4f5500__ff65cedc-5fa0-44f9-bef4-99b6606ffa60" },
+                            { "DocumentId", "60811da30f5dda0c64d3b39b" },
+                            { "Format", "pdf"}
+                            /*"RemoveFirstPages",False
+                              "RemoveEmptyPages",False
+                              "Coefficient",0,0001*/
+                        }
                         );
-                    
 
                     changeTracker.Saved(changeToken);
                     return true;
