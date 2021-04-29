@@ -72,6 +72,7 @@ namespace NAPS2.WinForms
         private bool closed = false;
         private LayoutManager layoutManager;
         private bool disableSelectedIndexChangedEvent;
+        private string sedSrvPrm;
 
         #endregion
 
@@ -310,9 +311,19 @@ namespace NAPS2.WinForms
                             Win32.ShowWindow(form.Handle, Win32.ShowWindowCommands.Restore);
                         }
                         form.Activate();
+                        sedSrvPrm = msg.Substring(Pipes.MSG_ACTIVATE.Length);
+
                     });
                 }
             });
+
+            //************** start for send to SED **********
+            string[] args = Environment.GetCommandLineArgs();
+            if (args.Length > 1)
+                foreach (String prm in args)
+                    if (prm.Substring(0, 6) == "sed://") sedSrvPrm = prm;
+            //*************** end to SED *******************
+
 
             // If configured (e.g. by a business), show a customizable message box on application startup.
             var appConfig = appConfigManager.Config;
@@ -1034,9 +1045,9 @@ namespace NAPS2.WinForms
             }
         }
 
-        private async void Send2SED(List<ScannedImage> images)
+        private async void Send2SED(List<ScannedImage> images, string sedSrvPrm)
         {
-            if (await exportHelper.SendPDF2SED(images))
+            if (await exportHelper.SendPDF2SED(images, sedSrvPrm))
             {
                 if (appConfigManager.Config.DeleteAfterSaving)
                 {
@@ -1487,7 +1498,7 @@ namespace NAPS2.WinForms
         }
         private void tsSend2Sed_Click(object sender, EventArgs e)
         {
-            Send2SED(imageList.Images);
+            Send2SED(imageList.Images, sedSrvPrm);
         }
         #endregion
 

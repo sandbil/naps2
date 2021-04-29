@@ -181,7 +181,15 @@ namespace NAPS2.Util
                 {
                     // Another instance of NAPS2 is running, so send it the "Activate" signal
                     ActivateProcess(process);
-                    if (Pipes.SendMessage(process, Pipes.MSG_ACTIVATE))
+                    //************** start for send to SED **********
+                    string[] args = Environment.GetCommandLineArgs();
+                    string sedSrvPrm = "";
+                    if (args.Length > 1)
+                        foreach (String prm in args)
+                            if (prm.Substring(0, 6) == "sed://") sedSrvPrm = prm;
+                    //*************** end to SED *******************
+                    if (Pipes.SendMessage(process, Pipes.MSG_ACTIVATE + sedSrvPrm))
+//                    if (Pipes.SendMessage(process, Pipes.MSG_ACTIVATE))
                     {
                         // Successful, so this instance should be closed
                         Environment.Exit(0);

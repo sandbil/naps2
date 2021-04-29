@@ -310,7 +310,7 @@ namespace NAPS2.WinForms
                     return await reader.ReadToEndAsync();
             }
         }
-        public async Task<bool> SendPDF2SED(List<ScannedImage> images)
+        public async Task<bool> SendPDF2SED(List<ScannedImage> images, string sedSrvPrm)
         {
             if (!images.Any())
             {
@@ -318,30 +318,13 @@ namespace NAPS2.WinForms
             }
 
             var tempFolder = new DirectoryInfo(Path.Combine(Paths.Temp, Path.GetRandomFileName()));
-            var emailSettings = emailSettingsContainer.EmailSettings;
-            var invalidChars = new HashSet<char>(Path.GetInvalidFileNameChars());
-            var attachmentName = new string(emailSettings.AttachmentName.Where(x => !invalidChars.Contains(x)).ToArray());
-            if (string.IsNullOrEmpty(attachmentName))
-            {
-                attachmentName = "Scan.pdf";
-            }
-            if (!attachmentName.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
-            {
-                attachmentName += ".pdf";
-            }
-            attachmentName = fileNamePlaceholders.SubstitutePlaceholders(attachmentName, DateTime.Now, false);
             tempFolder.Create();
             
             try
             {
-                //var changeToken = changeTracker.State;
-                //string targetPath = Path.Combine(tempFolder.FullName, attachmentName);
-                //string pdfFileSaved = await ExportPDF(targetPath, images, false, null);
-                //if (pdfFileSaved != null)
-                //{
-                var op = operationFactory.Create<SaveImagesOperation>();
+                var op = operationFactory.Create<SaveImagesOperation>(); //todo save setting
                 var changeToken = changeTracker.State;
-                string savePath = Path.Combine(tempFolder.FullName, "aa");
+                string savePath = Path.Combine(tempFolder.FullName, "aa.tiff");
                 if (op.Start(savePath, DateTime.Now, images))
                 {
                     operationProgress.ShowProgress(op);
@@ -356,19 +339,20 @@ namespace NAPS2.WinForms
                     //StringCollection paths = new StringCollection();
                     //paths.Add(@pdfFileSaved);
                     //Clipboard.SetFileDropList(paths);
-                    string args = "sed://____5fe2d87ab89808114c587d57__6849c76d7f63112c18ccda394a4f5500__ff65cedc-5fa0-44f9-bef4-99b6606ffa60____60811da30f5dda0c64d3b39b____10.75.113.107____/";
+                    //string args = "sed://____5fe2d87ab89808114c587d57__6849c76d7f63112c18ccda394a4f5500__ff65cedc-5fa0-44f9-bef4-99b6606ffa60____60811da30f5dda0c64d3b39b____10.75.113.107____/";
                     string[] stringSeparators = new string[] { "____" };
-                    string[] subArgs = args.Split(stringSeparators, StringSplitOptions.None);
-                    string docId = subArgs[2]; //"60811da30f5dda0c64d3b39b";
+                    string[] subSrvPrm = sedSrvPrm.Split(stringSeparators, StringSplitOptions.None);
+                    string docId = subSrvPrm[2]; 
+                    string token = subSrvPrm[1]; 
+                    string srvIP = subSrvPrm[3]; 
+
                     //var response = await UploadFile("http://" + subArgs[3] + ":8080" + "/api/document/uploadFile", docId, pdfFileSaved, 
                     //    new Dictionary<string, object>  {}
                     //    );
-                    var response = await UploadFile("http://" + subArgs[3] + ":8080" + "/api/document/postStreamingScan", docId, op.FirstFileSaved,
+                    var response = await UploadFile("http://" + srvIP + ":8080" + "/api/document/postStreamingScan", docId, op.FirstFileSaved,
                         new Dictionary<string, object>  {
-                            // {"Comment", "test"},
-                            // {"Modified", DateTime.Now }
-                            { "Token", "5fe2d87ab89808114c587d57__6849c76d7f63112c18ccda394a4f5500__ff65cedc-5fa0-44f9-bef4-99b6606ffa60" },
-                            { "DocumentId", "60811da30f5dda0c64d3b39b" },
+                            { "Token", token },
+                            { "DocumentId", docId },
                             { "Format", "pdf"}
                             /*"RemoveFirstPages",False
                               "RemoveEmptyPages",False
