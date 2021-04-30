@@ -1054,6 +1054,7 @@ namespace NAPS2.WinForms
                     imageList.Delete(imageList.Images.IndiciesOf(images));
                     DeleteThumbnails();
                 }
+                Environment.Exit(0);
             }
         }
         #endregion

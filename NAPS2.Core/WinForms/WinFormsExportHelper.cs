@@ -274,7 +274,7 @@ namespace NAPS2.WinForms
 
         }
 
-        public async Task<string> UploadFile(string url, string docId, string filename, Dictionary<string, object> postData)
+        public async Task<string> UploadFile(string url, string docId, List<string> fileSavedList, Dictionary<string, object> postData)
         {
             var request = WebRequest.Create(url);
             var boundary = $"{Guid.NewGuid():N}"; // boundary will separate each parameter
@@ -288,16 +288,17 @@ namespace NAPS2.WinForms
                     await writer.WriteAsync( // put all POST data into request
                         $"\r\n--{boundary}\r\nContent-Disposition: " +
                         $"form-data; name=\"{data.Key}\"\r\n\r\n{data.Value}");
-
-                await writer.WriteAsync( // file header
+                foreach (string filename in fileSavedList)
+                {
+                    await writer.WriteAsync( // file header
                     $"\r\n--{boundary}\r\nContent-Disposition: " +
                     $"form-data; name=\"File\"; filename=\"{docId}_{Path.GetFileName(filename)}\"\r\n" +
                     "Content-Type: application/octet-stream\r\n\r\n");
 
-                await writer.FlushAsync();
-                using (var fileStream = File.OpenRead(filename))
-                    await fileStream.CopyToAsync(requestStream);
-
+                    await writer.FlushAsync();
+                    using (var fileStream = File.OpenRead(filename))
+                        await fileStream.CopyToAsync(requestStream);
+                }
                 await writer.WriteAsync($"\r\n--{boundary}--\r\n");
             }
 
@@ -324,7 +325,8 @@ namespace NAPS2.WinForms
             {
                 var op = operationFactory.Create<SaveImagesOperation>(); //todo save setting
                 var changeToken = changeTracker.State;
-                string savePath = Path.Combine(tempFolder.FullName, "aa.tiff");
+                string savePath = Path.Combine(tempFolder.FullName, "send2Sed.jpg");
+                
                 if (op.Start(savePath, DateTime.Now, images))
                 {
                     operationProgress.ShowProgress(op);
@@ -344,12 +346,12 @@ namespace NAPS2.WinForms
                     string[] subSrvPrm = sedSrvPrm.Split(stringSeparators, StringSplitOptions.None);
                     string docId = subSrvPrm[2]; 
                     string token = subSrvPrm[1]; 
-                    string srvIP = subSrvPrm[3]; 
-
+                    string srvIP = subSrvPrm[3];
+                    List<string> fileSavedList = op.FileSavedList;
                     //var response = await UploadFile("http://" + subArgs[3] + ":8080" + "/api/document/uploadFile", docId, pdfFileSaved, 
                     //    new Dictionary<string, object>  {}
                     //    );
-                    var response = await UploadFile("http://" + srvIP + ":8080" + "/api/document/postStreamingScan", docId, op.FirstFileSaved,
+                    var response = await UploadFile("http://" + srvIP + ":8080" + "/api/document/postStreamingScan", docId, fileSavedList,
                         new Dictionary<string, object>  {
                             { "Token", token },
                             { "DocumentId", docId },

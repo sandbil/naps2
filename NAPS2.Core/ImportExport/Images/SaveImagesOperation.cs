@@ -38,6 +38,7 @@ namespace NAPS2.ImportExport.Images
         }
 
         public string FirstFileSaved { get; private set; }
+        public List<string> FileSavedList { get; private set; }
 
         /// <summary>
         /// Saves the provided collection of images to a file with the given name. The image type is inferred from the file extension.
@@ -59,6 +60,7 @@ namespace NAPS2.ImportExport.Images
             {
                 try
                 {
+                    FileSavedList = new List<string>();
                     var subFileName = fileNamePlaceholders.SubstitutePlaceholders(fileName, dateTime, batch);
                     if (Directory.Exists(subFileName))
                     {
@@ -79,6 +81,7 @@ namespace NAPS2.ImportExport.Images
                         }
                         Status.StatusText = string.Format(MiscResources.SavingFormat, Path.GetFileName(subFileName));
                         FirstFileSaved = subFileName;
+
                         return await tiffHelper.SaveMultipage(snapshots, subFileName, imageSettingsContainer.ImageSettings.TiffCompression, OnProgress, CancelToken);
                     }
 
@@ -111,6 +114,7 @@ namespace NAPS2.ImportExport.Images
                             InvokeStatusChanged();
                             await DoSaveImage(snapshot, subFileName, format);
                             FirstFileSaved = subFileName;
+                            FileSavedList.Add(subFileName);
                         }
                         else
                         {
@@ -124,6 +128,7 @@ namespace NAPS2.ImportExport.Images
                             {
                                 FirstFileSaved = fileNameN;
                             }
+                            FileSavedList.Add(fileNameN);
                         }
                         i++;
                     }
